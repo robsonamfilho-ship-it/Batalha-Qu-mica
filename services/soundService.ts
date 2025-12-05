@@ -1,28 +1,45 @@
 
 // Web Audio API helper to generate game sounds without external files
 
-const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+let audioCtx: AudioContext | null = null;
+
+const getAudioContext = () => {
+  if (!audioCtx) {
+    // @ts-ignore
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioContextClass) {
+      audioCtx = new AudioContextClass();
+    }
+  }
+  return audioCtx;
+};
 
 const playTone = (freq: number, type: OscillatorType, duration: number, startTime: number = 0) => {
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
 
   osc.type = type;
-  osc.frequency.setValueAtTime(freq, audioCtx.currentTime + startTime);
+  osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
   
-  gain.gain.setValueAtTime(0.1, audioCtx.currentTime + startTime);
-  gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + startTime + duration);
+  gain.gain.setValueAtTime(0.1, ctx.currentTime + startTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + startTime + duration);
 
   osc.connect(gain);
-  gain.connect(audioCtx.destination);
+  gain.connect(ctx.destination);
 
-  osc.start(audioCtx.currentTime + startTime);
-  osc.stop(audioCtx.currentTime + startTime + duration);
+  osc.start(ctx.currentTime + startTime);
+  osc.stop(ctx.currentTime + startTime + duration);
 };
 
 export const playSound = (effect: 'hit' | 'miss' | 'error' | 'win' | 'click' | 'start') => {
-  if (audioCtx.state === 'suspended') {
-    audioCtx.resume();
+  const ctx = getAudioContext();
+  if (!ctx) return;
+
+  if (ctx.state === 'suspended') {
+    ctx.resume().catch(() => {});
   }
 
   switch (effect) {
@@ -35,16 +52,16 @@ export const playSound = (effect: 'hit' | 'miss' | 'error' | 'win' | 'click' | '
     
     case 'miss':
       // Low descending sound
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.frequency.setValueAtTime(200, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.5);
-      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.5);
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.setValueAtTime(200, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(50, ctx.currentTime + 0.5);
+      gain.gain.setValueAtTime(0.1, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
       osc.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(ctx.destination);
       osc.start();
-      osc.stop(audioCtx.currentTime + 0.5);
+      osc.stop(ctx.currentTime + 0.5);
       break;
 
     case 'error':

@@ -3,18 +3,32 @@ import { GoogleGenAI } from "@google/genai";
 import { HiddenTarget, ElementData } from "../types";
 import { PERIODIC_TABLE } from "../constants";
 
-// Initialize Gemini
-// Note: In a production environment, this should be proxied through a backend
-// to avoid exposing the key. For this demo, we assume process.env.API_KEY is available.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// Helper to safely get API Key without crashing in browsers where 'process' is undefined
+const getApiKey = () => {
+  try {
+    // @ts-ignore
+    if (typeof process !== 'undefined' && process.env) {
+      // @ts-ignore
+      return process.env.API_KEY || '';
+    }
+  } catch (e) {
+    return '';
+  }
+  return '';
+};
+
+// Initialize Gemini safely
+const ai = new GoogleGenAI({ apiKey: getApiKey() });
 
 export const getSmartHint = async (
   targets: HiddenTarget[],
   hitElements: number[],
   missedElements: number[]
 ): Promise<string> => {
-  if (!process.env.API_KEY) {
-    return "Configure sua API Key para receber dicas inteligentes do Professor Gemini.";
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    console.warn("API Key missing. Hint skipped.");
+    return "O sistema de comunicação está offline (API Key ausente).";
   }
 
   // Find remaining targets (elements not yet found)
@@ -47,9 +61,10 @@ export const getSmartHint = async (
     Sua tarefa:
     Escolha UM dos elementos restantes e dê uma dica CURTA e MISTERIOSA sobre ele.
     NÃO diga o nome do elemento diretamente.
+    NÃO fale coordenadas exatas (como "Grupo 1" ou "Periodo 2").
     
     Use propriedades como:
-    - Família/Grupo (ex: "Um gás nobre", "Um metal alcalino")
+    - Família/Grupo (ex: "Um gás nobre", "Um metal alcalino") mas de forma descritiva.
     - Período (ex: "Está nas linhas de cima", "Um elemento pesado")
     - Camada de Valência (ex: "Termina em p5")
     - Estado físico ou aplicação real.
@@ -72,8 +87,9 @@ export const getSmartHint = async (
 };
 
 export const getEducationalFact = async (element: ElementData): Promise<string> => {
-  if (!process.env.API_KEY) {
-    return "Curiosidade não disponível: API Key não configurada.";
+  const apiKey = getApiKey();
+  if (!apiKey) {
+    return `O ${element.name} é um elemento fascinante!`;
   }
 
   const prompt = `
