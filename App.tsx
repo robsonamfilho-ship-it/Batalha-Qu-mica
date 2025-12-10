@@ -5,7 +5,7 @@ import { PERIODIC_TABLE, MAX_TURNS } from './constants';
 import PeriodicTable from './components/PeriodicTable';
 import { playSound } from './services/soundService';
 import { getSmartHint, getEducationalFact } from './services/geminiService';
-import { Activity, Beaker, Trophy, Target, Eye, User, ArrowRight, Heart, CheckCircle, AlertOctagon, Lightbulb, BookOpen, Clock, X, Atom } from 'lucide-react';
+import { Activity, Beaker, Trophy, Target, Eye, User, ArrowRight, CheckCircle, AlertOctagon, Lightbulb, BookOpen, Clock, X, Atom, HelpCircle, Info, Heart, Zap } from 'lucide-react';
 
 const TARGET_COUNT = 3; // Number of hidden elements to find
 
@@ -33,6 +33,7 @@ const App: React.FC = () => {
 
   // Educational & Hint State
   const [showFactModal, setShowFactModal] = useState<string | null>(null);
+  const [showTutorial, setShowTutorial] = useState(false);
   const [factLoading, setFactLoading] = useState(false);
   const [hintLoading, setHintLoading] = useState(false);
 
@@ -319,6 +320,125 @@ const App: React.FC = () => {
 
   const getActivePlayerName = () => getCurrentState(activePlayerId).name;
 
+  // --- TUTORIAL COMPONENT ---
+  const renderTutorialModal = () => (
+    <div className="fixed inset-0 bg-black/90 z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 relative shadow-2xl overflow-y-auto max-h-[90vh]">
+        <button 
+          onClick={() => setShowTutorial(false)}
+          className="absolute top-4 right-4 p-2 bg-slate-800 rounded-full hover:bg-slate-700 text-white transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+        
+        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+           <BookOpen className="w-6 h-6 text-cyan-400" />
+           Como achar o Nível de Energia?
+        </h2>
+        
+        <div className="space-y-6">
+           <p className="text-slate-300">
+             Para acertar o tiro, você precisa digitar o <strong>subnível mais energético</strong> (ex: 3s2, 4d10). 
+             A Tabela Periódica é seu mapa!
+           </p>
+
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              
+              {/* Bloco S */}
+              <div className="bg-red-900/30 border border-red-500/50 p-4 rounded-xl">
+                 <h3 className="text-red-400 font-bold mb-2">Bloco S (Grupos 1 e 2)</h3>
+                 <p className="text-sm text-slate-300 mb-2">Metais Alcalinos e Alcalinoterrosos.</p>
+                 <div className="bg-slate-950 p-2 rounded text-center font-mono text-yellow-400 text-lg">
+                    [Período]s¹⁻²
+                 </div>
+                 <p className="text-xs text-slate-400 mt-2">Ex: Lítio (Linha 2) = <strong>2s¹</strong></p>
+              </div>
+
+              {/* Bloco P */}
+              <div className="bg-blue-900/30 border border-blue-500/50 p-4 rounded-xl">
+                 <h3 className="text-blue-400 font-bold mb-2">Bloco P (Grupos 13 a 18)</h3>
+                 <p className="text-sm text-slate-300 mb-2">Não-metais, Halogênios, Gases Nobres.</p>
+                 <div className="bg-slate-950 p-2 rounded text-center font-mono text-yellow-400 text-lg">
+                    [Período]p¹⁻⁶
+                 </div>
+                 <p className="text-xs text-slate-400 mt-2">Ex: Carbono (Linha 2) = <strong>2p²</strong></p>
+              </div>
+
+              {/* Bloco D */}
+              <div className="bg-yellow-900/30 border border-yellow-500/50 p-4 rounded-xl">
+                 <h3 className="text-yellow-400 font-bold mb-2">Bloco D (Metais de Transição)</h3>
+                 <p className="text-sm text-slate-300 mb-2">O "miolo" da tabela.</p>
+                 <div className="bg-slate-950 p-2 rounded text-center font-mono text-yellow-400 text-lg">
+                    [Período - 1]d¹⁻¹⁰
+                 </div>
+                 <p className="text-xs text-slate-400 mt-2">
+                    ⚠️ Atenção! Subtraia 1 do número da linha.<br/>
+                    Ex: Ferro (Linha 4) = <strong>3d⁶</strong>
+                 </p>
+              </div>
+
+              {/* Bloco F */}
+              <div className="bg-pink-900/30 border border-pink-500/50 p-4 rounded-xl">
+                 <h3 className="text-pink-400 font-bold mb-2">Bloco F (Lantanídeos/Actinídeos)</h3>
+                 <p className="text-sm text-slate-300 mb-2">As duas linhas separadas embaixo.</p>
+                 <div className="bg-slate-950 p-2 rounded text-center font-mono text-yellow-400 text-lg">
+                    [Período - 2]f¹⁻¹⁴
+                 </div>
+                 <p className="text-xs text-slate-400 mt-2">
+                    ⚠️ Atenção! Subtraia 2 do número da linha.<br/>
+                    Ex: Urânio (Linha 7) = <strong>5f³</strong>
+                 </p>
+              </div>
+           </div>
+
+           {/* --- EXCEÇÕES E ESTABILIDADE --- */}
+           <div className="mt-4 bg-purple-900/20 border border-purple-500/40 p-5 rounded-xl">
+               <h3 className="text-purple-300 font-bold mb-3 flex items-center gap-2">
+                   <Zap className="w-5 h-5 text-yellow-400" /> Exceções de Estabilidade (Regra de Ouro)
+               </h3>
+               <p className="text-sm text-slate-300 mb-4 leading-relaxed">
+                   A natureza busca estabilidade! Camadas <strong>semi-cheias</strong> (d5, f7) ou <strong>completas</strong> (d10, f14) são muito estáveis. 
+                   Às vezes, o átomo "promove" um elétron do nível <em>s</em> para completar o nível <em>d</em> ou <em>f</em>.
+               </p>
+               
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-mono">
+                   {/* Caso d4 -> d5 */}
+                   <div className="bg-slate-950 p-3 rounded border border-purple-500/20">
+                       <p className="text-slate-400 font-sans mb-1 font-bold">Caso d4 → d5 (Ex: Cromo)</p>
+                       <div className="flex items-center gap-2">
+                           <span className="text-red-400/70 line-through decoration-red-500">4s² 3d⁴</span>
+                           <ArrowRight className="w-3 h-3 text-slate-500" />
+                           <span className="text-green-400 font-bold bg-green-900/20 px-1 rounded">4s¹ 3d⁵</span>
+                       </div>
+                   </div>
+
+                   {/* Caso d9 -> d10 */}
+                   <div className="bg-slate-950 p-3 rounded border border-purple-500/20">
+                       <p className="text-slate-400 font-sans mb-1 font-bold">Caso d9 → d10 (Ex: Cobre)</p>
+                       <div className="flex items-center gap-2">
+                           <span className="text-red-400/70 line-through decoration-red-500">4s² 3d⁹</span>
+                           <ArrowRight className="w-3 h-3 text-slate-500" />
+                           <span className="text-green-400 font-bold bg-green-900/20 px-1 rounded">4s¹ 3d¹⁰</span>
+                       </div>
+                   </div>
+               </div>
+               
+               <p className="text-[10px] text-slate-500 mt-2 italic border-t border-purple-500/10 pt-2">
+                  *Isso também ocorre no bloco F (Lantanídeos e Actinídeos) de formas complexas, mas o princípio é o mesmo: o elétron migra para garantir um subnível mais estável.
+               </p>
+           </div>
+           
+           <button 
+             onClick={() => setShowTutorial(false)}
+             className="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-lg transition-colors mt-2"
+           >
+             Entendi!
+           </button>
+        </div>
+      </div>
+    </div>
+  );
+
   // --- RENDERERS ---
 
   // 1. Name Input Screen (Stylized Cover)
@@ -544,14 +664,10 @@ const App: React.FC = () => {
       message = "Empate técnico! Ambos são mestres da química.";
     }
 
-    // Override if someone found all 3 (Instant Win logic already handled by setting winner implicitly via found_all check, but here is strictly score based for timeout)
-    // If reason was 'found_all', the last player who moved triggered it and won.
-    // We can just rely on hits count because finding all 3 = 3 hits, which is max score.
-    
     return (
-      <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
-           <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-lg w-full p-8 text-center shadow-2xl">
-              <Trophy className="w-20 h-20 text-yellow-400 mx-auto mb-6 animate-bounce" />
+      <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4 overflow-y-auto">
+           <div className="bg-slate-900 border border-slate-700 rounded-2xl w-full max-w-5xl p-8 text-center shadow-2xl my-auto">
+              <Trophy className="w-16 h-16 text-yellow-400 mx-auto mb-4 animate-bounce" />
               {winner ? (
                 <>
                   <h2 className="text-4xl font-bold text-white mb-2">VITÓRIA!</h2>
@@ -566,7 +682,7 @@ const App: React.FC = () => {
                 </>
               )}
               
-              <div className="grid grid-cols-2 gap-4 mb-8">
+              <div className="grid grid-cols-2 gap-4 mb-8 max-w-lg mx-auto">
                  <div className={`p-4 rounded-lg ${p1Score > p2Score ? 'bg-blue-900/50 border border-blue-500' : 'bg-slate-800'}`}>
                     <p className="text-xs text-slate-500 uppercase">{p1State.name}</p>
                     <p className="text-xl font-mono">{p1Score}/{TARGET_COUNT}</p>
@@ -576,9 +692,37 @@ const App: React.FC = () => {
                     <p className="text-xl font-mono">{p2Score}/{TARGET_COUNT}</p>
                  </div>
               </div>
+
+              {/* REVEAL FLEETS SECTION */}
+              <div className="bg-slate-950/50 rounded-xl p-4 border border-slate-800 mb-8">
+                 <h3 className="text-slate-400 font-bold uppercase tracking-widest mb-4 flex items-center justify-center gap-2">
+                    <Info className="w-4 h-4" /> Localização das Frotas
+                 </h3>
+                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                       <p className="text-blue-400 font-bold text-left text-sm">Frota de {p1State.name}</p>
+                       <div className="overflow-auto rounded border border-slate-700 p-1 bg-slate-900 h-[300px]">
+                          <PeriodicTable 
+                             onElementClick={() => {}} hits={[]} misses={[]} 
+                             targets={p1State.targets} disabled={true} 
+                          />
+                       </div>
+                    </div>
+                    <div className="space-y-2">
+                       <p className="text-red-400 font-bold text-left text-sm">Frota de {p2State.name}</p>
+                       <div className="overflow-auto rounded border border-slate-700 p-1 bg-slate-900 h-[300px]">
+                          <PeriodicTable 
+                             onElementClick={() => {}} hits={[]} misses={[]} 
+                             targets={p2State.targets} disabled={true} 
+                          />
+                       </div>
+                    </div>
+                 </div>
+              </div>
+
               <button 
                 onClick={() => { playSound('click'); setStatus('names'); }}
-                className="w-full py-3 bg-white text-slate-900 font-bold rounded-lg hover:bg-slate-200 transition-colors"
+                className="w-full max-w-sm py-3 bg-white text-slate-900 font-bold rounded-lg hover:bg-slate-200 transition-colors mx-auto block"
               >
                 Jogar Novamente
               </button>
@@ -592,6 +736,8 @@ const App: React.FC = () => {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans overflow-hidden">
       
+      {showTutorial && renderTutorialModal()}
+
       <header className={`p-4 shadow-lg z-20 border-b transition-colors ${activePlayerId === 'p1' ? 'bg-blue-950/50 border-blue-900' : 'bg-red-950/50 border-red-900'}`}>
           <div className="container mx-auto flex justify-between items-center">
              <div className="flex items-center gap-3">
@@ -610,12 +756,21 @@ const App: React.FC = () => {
                  </div>
                </div>
              </div>
-             <button 
-                onClick={() => { playSound('click'); setIsViewingOwnFleet(true); setRevealTimer(5); }}
-                className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg"
-             >
-                <Eye className="w-4 h-4" /> Ver Meus Elementos
-             </button>
+             <div className="flex gap-2">
+                <button 
+                   onClick={() => setShowTutorial(true)}
+                   className="bg-slate-700 hover:bg-slate-600 text-white p-2 rounded-lg shadow-lg"
+                   title="Ajuda sobre Distribuição Eletrônica"
+                >
+                   <HelpCircle className="w-5 h-5" />
+                </button>
+                <button 
+                   onClick={() => { playSound('click'); setIsViewingOwnFleet(true); setRevealTimer(5); }}
+                   className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg"
+                >
+                   <Eye className="w-4 h-4" /> Ver Meus Elementos
+                </button>
+             </div>
           </div>
         </header>
 
@@ -767,7 +922,10 @@ const App: React.FC = () => {
                    </div>
                 </div>
                 <div>
-                   <label className="block text-sm text-slate-300 mb-2">Digite a camada mais energética (ex: 3d5):</label>
+                   <div className="flex justify-between items-center mb-2">
+                      <label className="block text-sm text-slate-300">Camada mais energética (ex: 3d5):</label>
+                      <button onClick={() => setShowTutorial(true)} className="text-xs text-cyan-400 hover:text-cyan-300 underline">Precisa de ajuda?</button>
+                   </div>
                    <input 
                       autoFocus
                       type="text"
